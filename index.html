@@ -1,11 +1,166 @@
-<!DOCTYPE html>
+<!--
+To change this template use Tools | Templates.
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
+
 <head>
-    <meta charset="utf-8">
-    <title>Hello World</title>
-    <link href="styles/main.css" rel="stylesheet">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    <title>UMS Web Client</title>
 </head>
+
 <body>
-    <h1>Hello, World!</h1>
+    <div id="wrapper">
+        <div id="container">
+            <script id="response" type="text/xml"></script>
+            <div id="serviceList">
+                <h2>null</h2>
+                <div id="ContentDirectory">
+                    <h2>null</h2>
+                    <div id="CDserviceType">
+                        <h2>null</h2>
+                    </div>
+                    <div id="CDserviceId">
+                        <h2>null</h2>
+                    </div>
+                    <div id="CDSCPDURL">
+                        <h2>null</h2>
+                    </div>
+                    <div id="CDcontrolURL">
+                        <h2>null</h2>
+                    </div>
+                    <div id="CDeventSubURL">
+                        <h2>null</h2>
+                    </div>
+                </div>
+                <div id="ConnectionManager">
+                    <h2>null</h2>
+                    <div id="CMserviceType">
+                        <h2>null</h2>
+                    </div>
+                    <div id="CMserviceId">
+                        <h2>null</h2>
+                    </div>
+                    <div id="CMSCPDURL">
+                        <h2>null</h2>
+                    </div>
+                    <div id="CMcontrolURL">
+                        <h2>null</h2>
+                    </div>
+                    <div id="CMeventSubURL">
+                        <h2>null</h2>
+                    </div>
+                </div>
+            </div>
+            <h1>UMS Web Client</h1>
+            <div id="dc:title">
+                <h2>null</h2>
+            </div>
+            <!-- #dc:title -->
+            <div id="dirContent">
+                <h2>null</h2>
+            </div>
+            <!-- #dirContent -->
+            <div id="chatLog">
+            </div>
+            <!-- #chatLog -->
+            <script>
+                window.onload = function() {
+                    if(!window.XMLHttpRequest) {
+                        $('#chatLog, input, button, #examples').fadeOut("fast");
+                        $('<p>Oh no, you need a browser that supports XML Http Requests. How about <a href="http://www.google.com/chrome">Google Chrome</a>?</p>').appendTo('#container');
+                    } else {
+                        //The user has XHR
+                        var xhr;
+                        var Host = 'http://192.168.1.8:5001';
+                        var CDserviceType = 'urn:schemas-upnp-org:service:ContentDirectory:1';
+                        var CDserviceId = 'urn:upnp-org:serviceId:ContentDirectory';
+                        var CDSCPDURL = '/UPnP_AV_ContentDirectory_1.0.xml';
+                        var CDcontrolURL = '/upnp/control/content_directory';
+                        var CDeventSubURL = '/upnp/event/content_directory';
+                        var CMserviceType = 'urn:schemas-upnp-org:service:ConnectionManager:1';
+                        var CMserviceId = 'urn:upnp-org:serviceId:ConnectionManager';
+                        var CMSCPDURL = '/UPnP_AV_ConnectionManager_1.0.xml';
+                        var CMcontrolURL = '/upnp/control/connection_manager';
+                        var CMeventSubURL = '/upnp/event/connection_manager';
+                        connect();
+
+                        function connect() {
+                            xhr = new XMLHttpRequest();
+                            var toRequest;
+                            sendRequest('GET', Host + '/description/fetch');
+                            $('<p><a href="http://www.google.com/chrome">' + Host + '</a>?</p>').appendTo('#dirContent');
+                            sendRequest('GET', Host + CDSCPDURL);
+                            sendRequest('GET', Host + CMSCPDURL);
+                            sendRequest('POST', Host + CMcontrolURL, '"urn:schemas-upnp-org:service:ConnectionManager:1#GetProtocolInfo"');
+                            sendRequest('POST', Host + CDcontrolURL, '"urn:schemas-upnp-org:service:ContentDirectory:1#Browse"');
+                            //sendRequest('POST', Host+'/upnp/control/content_directory', '"urn:schemas-upnp-org:service:ContentDirectory:1#Browse"', '<?xml version="1.0" encoding="utf-8"?><s:Envelope s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><u:Browse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1"><ObjectID>0</ObjectID><ContainerID>0</ContainerID><StartingIndex>0</StartingIndex><RequestedCount>0</RequestedCount><BrowseFlag>BrowseDirectChildren</BrowseFlag></u:Browse></s:Body></s:Envelope>');
+                            //sendRequest('POST', Host+'/upnp/control/content_directory', '"urn:schemas-upnp-org:service:ContentDirectory:1#Browse"', '<?xml version="1.0" encoding="utf-8"?><s:Envelope s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><u:Browse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1"><ObjectID>0$1</ObjectID><ContainerID>0$1$4</ContainerID><StartingIndex>0</StartingIndex><RequestedCount>0</RequestedCount><BrowseFlag>BrowseDirectChildren</BrowseFlag></u:Browse></s:Body></s:Envelope>');
+                        } //End connect
+                    } //End else
+
+                    function buildRequest(req) {
+                        var build = '<?xml version="1.0" encoding="utf-8"?><s:Envelope s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body>';
+                        build += req.substring(req.indexOf('&lt;UpdateID&gt;') + 16, req.indexOf('&lt;/UpdateID&gt;'));
+                        build += '</s:Body></s:Envelope>';
+                        message('Built| ' + build.toString());
+                        return build;
+                    }
+
+                    function sendRequest(method, url, soap, request) {
+                        xhr.open(method, url, false);
+                        message('Opened request| ' + method + ': ' + url);
+                        if(soap) {
+                            xhr.setRequestHeader('Soapaction', soap);
+                        }
+                        message('Headers set| ' + xhr.requestHeaders);
+                        xhr.send(request);
+                        message('Sent request');
+                        message('Response headers| ' + xhr.getAllResponseHeaders());
+                        document.getElementById('response').innerHTML = xhr.responseText;
+                        document.getElementById('dc:title').innerHTML = xhr.responseText.substring(xhr.responseText.indexOf('&lt;dc:title&gt;') + 16, xhr.responseText.indexOf('&lt;/dc:title&gt;'));
+                        message('Output:</p><p' + xhr.responseText);
+                        toRequest = buildRequest(document.getElementById('response').innerHTML);
+                        message('Envelope: ' + toRequest);
+                    }
+                    xhr.onreadystatechange = function() {
+                        if(xhr.readyState == 4 && xhr.status == 200) {
+                            document.getElementById('CDserviceType').innerHTML = xhr.responseText.substring(xhr.responseText.indexOf('&lt;serviceType&gt;') + 24, xhr.responseText.indexOf('&lt;/serviceType&gt;'));
+                            document.getElementById('CDserviceId').innerHTML = xhr.responseText.substring(xhr.responseText.indexOf('&lt;serviceId&gt;') + 24, xhr.responseText.indexOf('&lt;/serviceId&gt;'));
+                        }
+                    }
+
+                    function message(msg) {
+                        var dpy = 365.25;
+                        var hpd = 24;
+                        var mph = 60;
+                        var spm = 60;
+                        var msps = 1000;
+                        var seconds = msps;
+                        var minutes = seconds * spm;
+                        var hours = minutes * mph;
+                        var days = hours * hpd;
+                        var years = days * dpy;
+                        var d = new Date();
+                        var t = d.getTime();
+                        var y = Math.floor(t / years);
+                        var d = Math.floor(t / days);
+                        var doy = d - y * dpy;
+                        var h = Math.floor(t / hours);
+                        var hod = h - d * hpd;
+                        var m = Math.floor(t / minutes);
+                        var moh = m - h * mph;
+                        var s = Math.floor(t / seconds);
+                        var som = s - m * spm;
+                        var ms = Math.floor(t);
+                        var msos = ms - s * msps;
+                        $('#chatLog').append('<p>' + hod + ':' + moh + ':' + som + '.' + msos + ' ' + msg + '</p>');
+                    }
+                }
+            </script>
+        </div>
+        <!-- #container -->
+    </div>
 </body>
+
 </html>
